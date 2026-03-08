@@ -1,5 +1,11 @@
-//! Waku (枠) — UI primitives for Neovim: floating windows, borders, input prompts, scrollable lists, layout
+//! Waku (枠) — UI primitives for Neovim.
 //!
-//! Shared library for the blnvim-ng plugin suite.
-//! Built with [`nvim-oxi`](https://github.com/noib3/nvim-oxi) for zero-cost
-//! Neovim API bindings.
+//! Building blocks for floating windows, borders, input prompts,
+//! scrollable lists, and layout management. Used by plugin crates
+//! like `katachi`, `tejun`, `hokan`, and `shiboru`.
+
+pub mod border;
+pub mod float;
+pub mod input;
+pub mod layout;
+pub mod list;
