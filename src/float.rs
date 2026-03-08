@@ -3,7 +3,9 @@
 use crate::border::BorderStyle;
 use crate::layout::FloatLayout;
 use nvim_oxi::api;
-use nvim_oxi::types::{WindowBuffer, WindowConfig, WindowRelativeTo, WindowStyle};
+use nvim_oxi::api::types::{
+    WindowBorder, WindowConfig, WindowRelativeTo, WindowStyle,
+};
 
 /// A managed floating window.
 pub struct FloatWindow {
@@ -60,6 +62,7 @@ impl FloatWindow {
     /// Open the floating window. Returns a reference to self for chaining.
     pub fn open(&mut self) -> tane::Result<&mut Self> {
         let ui = api::list_uis().into_iter().next();
+        #[allow(clippy::cast_possible_truncation)]
         let (editor_width, editor_height) = match ui {
             Some(ref u) => (u.width as u32, u.height as u32),
             None => (80, 24),
@@ -67,13 +70,23 @@ impl FloatWindow {
 
         let (row, col, width, height) = self.layout.resolve(editor_width, editor_height);
 
+        let win_border = match &self.border {
+            BorderStyle::None => WindowBorder::None,
+            BorderStyle::Single => WindowBorder::Single,
+            BorderStyle::Double => WindowBorder::Double,
+            BorderStyle::Rounded => WindowBorder::Rounded,
+            BorderStyle::Solid => WindowBorder::Solid,
+            BorderStyle::Shadow => WindowBorder::Shadow,
+            BorderStyle::Custom(_) => WindowBorder::Single,
+        };
+
         let config = WindowConfig::builder()
             .relative(WindowRelativeTo::Editor)
             .row(f64::from(row))
             .col(f64::from(col))
             .width(width)
             .height(height)
-            .border(self.border.to_api_name())
+            .border(win_border)
             .focusable(self.focusable)
             .style(WindowStyle::Minimal)
             .build();
@@ -93,7 +106,8 @@ impl FloatWindow {
 
     /// Set the buffer content (replaces all lines).
     pub fn set_lines(&mut self, lines: &[&str]) -> tane::Result<()> {
-        self.buf.set_lines(0..lines.len(), true, lines)?;
+        self.buf
+            .set_lines(0..lines.len(), true, lines.iter().copied())?;
         Ok(())
     }
 
